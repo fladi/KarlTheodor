@@ -1,0 +1,41 @@
+# Location to the DB file where intermediate states are stored.
+karltheodor.storage=karltheodor.db
+karltheodor.group=MUG
+karltheodor.types=DIPLARB,MAGARB,DISS,BAKARB,ABS
+karltheodor.wkhtmltopdf=/usr/bin/wkhtmltopdf
+karltheodor.pdfa=PDFA_def.ps.tmpl
+
+# Secret token from CAMPUSonline. Has to be created in "Web Service Management" for service "Thesis".
+campusonline.url=
+campusonline.token=
+
+# iThenticate credentials.
+ithenticate.url=https://api.ithenticate.com:443/rpc
+ithenticate.username=
+ithenticate.password=
+
+# Log4Perl configuration.
+log4perl.rootLogger=DEBUG, SCREEN
+
+log4perl.logger.karltheodor=INFO, LOGFILE, Email
+log4perl.logger.campusonline=INFO, LOGFILE, Email
+log4perl.logger.ithenticate=INFO, LOGFILE, Email
+
+log4perl.appender.LOGFILE=Log::Log4perl::Appender::File
+log4perl.appender.LOGFILE.filename=karltheodor.log
+log4perl.appender.LOGFILE.mode=append
+log4perl.appender.LOGFILE.layout=PatternLayout
+log4perl.appender.LOGFILE.layout.ConversionPattern=[%r] %F %L %c - %m%n
+
+log4perl.appender.SCREEN=Log::Log4perl::Appender::Screen
+log4perl.appender.SCREEN.layout=PatternLayout
+log4perl.appender.SCREEN.layout.ConversionPattern=%d %-5p %c - %m%n
+
+log4perl.appender.Email           = Log::Dispatch::Email::MailSender
+log4perl.appender.Email.name      = email
+log4perl.appender.Email.min_level = info
+log4perl.appender.Email.to        = max.musterman@example.com
+log4perl.appender.Email.from      = KarlTheodor@example.com
+log4perl.appender.Email.subject   = KarlTheodor
+log4perl.appender.Email.smtp      = smtp.example.com
+log4perl.appender.Email.layout    = SimpleLayout
