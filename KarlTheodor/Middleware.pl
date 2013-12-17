@@ -44,6 +44,7 @@ use Try::Tiny;
 use DateTime;
 use LWP::UserAgent;
 use IPC::Run;
+use JSON;
 
 # Load webservices packages.
 use CAMPUSonline::ThesisTypes::SimpleThesisType;
@@ -367,32 +368,40 @@ for my $doc ( keys %$db ) {
    # Fetch report information.
    my $report = $iface{it}->get_report( { id => $part->{id}, } );
 
+   # https://api.ithenticate.com/report/12686466/similarity
+   my ($report_id) = $report->report->{report_url} =~ m/\/(\d+)\//g;
+   $logger{kt}->debug("Found report ID: ", $report_id);
+
    # Download report.
-   $logger{co}->debug( "Downloading plagiarism report: ", $report->report->{view_only_url} );
-   my $response = $ua->get( $report->report->{view_only_url} );
+   $ua->get( $report->report->{view_only_url} );
+
+   #$ua->get(sprintf("https://api.ithenticate.com/paper/%d?cv=1&lang=en_us&output=json", $report_id));
+
+   #$ua->get(sprintf("https://api.ithenticate.com/en_us/paper/%d/glyph?page=1&count=10&cv=1&lang=en_us&output=json", $report_id));
+
+   #$ua->get(sprintf("https://api.ithenticate.com/paper/%d/primary/similarity?tl=0&cv=1&lang=en_us&output=json", $report_id));
+
+   $logger{kt}->info("Starting PDF report retrieval: ", $report_id);
+   my $response = $ua->post(
+    sprintf("https://api.ithenticate.com/paper/%d/queue_pdf?&lang=en_us&output=json", $report_id),
+    'Content-type'   => 'application/json;charset=utf-8',
+    Content          => '{"as":1,"or_type":"similarity"}',
+   );
+   my $status = 0;
+   my $pdf_url = "";
+   my $status_url = (decode_json $response->content)->{url};
+   while ($status == 0) {
+    $response = $ua->get(sprintf("%s?lang=en_us&output=json", $status_url));
+    my $body = decode_json $response->content;
+    $status = $body->{ready};
+    $pdf_url = $body->{url};
+    sleep 10;
+   }
+
+   $response = $ua->get($pdf_url);
 
    if ( !$response ) {
     $logger{kt}->error( "Could not download document: ", $report->report->{view_only_url} );
-   }
-
-   # Hold content of document to be uploaded in memory.
-   my $content   = "";
-   my $mimetype  = "";
-   my $extension = "";
-
-   # Convert HTML report to PDF.
-   $logger{kt}->debug( "Looking for HTML to PDF converter: ", $conf{'karltheodor.wkhtmltopdf'} );
-   if ( -x $conf{'karltheodor.wkhtmltopdf'} ) {
-    $logger{kt}->debug("Converting document: application/pdf");
-    IPC::Run::run [ $conf{'karltheodor.wkhtmltopdf'}, '-q', '-', '-' ], \$response->content, \$content or die "cat: $?";
-    $mimetype  = "application/pdf";
-    $extension = "pdf";
-   }
-   else {
-    $logger{kt}->debug( "Using document without conversion: ", $response->content_type );
-    $content   = $response->content;
-    $mimetype  = ( $response->content_type )[0];
-    $extension = ( split /\//, ( $response->content_type )[0] )[1];
    }
 
    # Convert to PDF/A if template is set.
@@ -411,12 +420,12 @@ for my $doc ( keys %$db ) {
       serviceName    => 'iThenticate',
       pop            => $file->{percent_match},
       reportDoc      => {
-       fileName      => sprintf( "iThenticate_%s.%s", $part->{id}, $extension ),
-       mimeType      => $mimetype,
-       fileSize      => length $content,
+       fileName      => sprintf("iThenticate_%s.pdf", $part->{id}),
+       mimeType      => "application/pdf",
+       fileSize      => length $response->content,
        fileCreatedOn => DateTime->now()->iso8601(),
        fileChangedOn => DateTime->now()->iso8601(),
-       content       => encode_base64($content),
+       content       => encode_base64($response->content),
       },
      },
     },
