@@ -1,5 +1,7 @@
 #!/usr/bin/perl
 #
+# vim: ai ts=1 sts=1 et sw=1 ft=perl
+#
 # Copyright (c) 2013, Michael Fladischer <michael.fladischer@medunigraz.at>
 #               2013, Peter Reibnegger <peter.reibnegger@medunigraz.at>
 #
