@@ -94,7 +94,9 @@ $logger{kt}->info("Starting run.");
 # Instantiate new LWP user agent for downloads.
 my $ua = LWP::UserAgent->new;
 $ua->timeout(10);
-$ua->cookie_jar( {} );
+$ua->cookie_jar( { use_dv => 0, use_text => 1 } );
+$ua->add_handler("request_send",  sub { my $request = shift; $logger{kt}->debug(sprintf("Useragent request: %s %s", $request->method, $request->uri)); return });
+$ua->add_handler("response_done", sub { my $response = shift; $logger{kt}->debug(sprintf("Useragent response: %s", $response->code)); return });
 
 # Initialize Storable persistence file.
 my $db = {};
