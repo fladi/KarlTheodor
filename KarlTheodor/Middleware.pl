@@ -362,7 +362,7 @@ for my $doc ( keys %$db ) {
 
    # Skip already uploaded parts.
    $logger{kt}->debug( "Checking for already uploaded plagiarism reports for document ID: ", $file->{id} );
-   if ( grep { $_ = $part->{id} } @{ $db->{ $file->{id} }->{parts} } ) {
+   if ( grep { $_ == $part->{id} } @{ $db->{ $file->{id} }->{parts} } ) {
     $logger{kt}->debug( "Part already successfully uploaded, skipping: ", $part->{id} );
     next;
    }
