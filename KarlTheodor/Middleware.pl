@@ -30,6 +30,7 @@ use strict;
 use warnings;
 
 # Load system packages.
+use Encode qw(encode);
 use Getopt::Long;
 use Config::General;
 use Pod::Usage;
@@ -286,9 +287,9 @@ foreach my $type (@types) {
   try {
    $upload = $iface{it}->add_document(
     {
-     title        => "" . ( grep { $_->{LANG}     eq $attributes->{BASE}->[0]->{OLANG} } @{ $attributes->{TEXT} } )[0]->{TIT},
-     author_first => "" . ( grep { "" . $_->{TYP} eq "A" } @{ $attributes->{AUTHOR} } )[0]->{FN},
-     author_last  => "" . ( grep { "" . $_->{TYP} eq "A" } @{ $attributes->{AUTHOR} } )[0]->{LN},
+     title        => encode('UTF-8', "" . ( grep { $_->{LANG}     eq $attributes->{BASE}->[0]->{OLANG} } @{ $attributes->{TEXT} } )[0]->{TIT}, Encode::FB_CROAK),
+     author_first => encode('UTF-8', "" . ( grep { "" . $_->{TYP} eq "A" } @{ $attributes->{AUTHOR} } )[0]->{FN}, Encode::FB_CROAK),
+     author_last  => encode('UTF-8', "" . ( grep { "" . $_->{TYP} eq "A" } @{ $attributes->{AUTHOR} } )[0]->{LN}, Encode::FB_CROAK),
      filename     => $thesis . '.pdf',
      upload       => $content->content,
      folder       => $folder->{id},
